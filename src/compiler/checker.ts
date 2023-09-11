@@ -17740,6 +17740,12 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             // TEALScript TODO: Custom error when storage key is not the correct type
         }
 
+        // TEALScript: If the object is local state accounts, allow address/account indexing
+        if (typeToString(objectType).startsWith('LocalStateAccounts<') && objectType.aliasTypeArguments && objectType.aliasTypeArguments[0]) {
+            if (['Address', 'Account'].includes(typeToString(indexType))) return objectType.aliasTypeArguments[0];
+            // TEALScript TODO: Custom error when storage key is not the correct type
+        }
+
         if (!(indexType.flags & TypeFlags.Nullable) && isTypeAssignableToKind(indexType, TypeFlags.StringLike | TypeFlags.NumberLike | TypeFlags.ESSymbolLike)) {
             if (objectType.flags & (TypeFlags.Any | TypeFlags.Never)) {
                 return objectType;
