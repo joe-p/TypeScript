@@ -21174,15 +21174,21 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
 
             /*
-            TEALScript: If we're working with a storage value, then check if the source type is related to the ValueType
+            TEALScript: If we're working with a storage value, then check if the source or target type is related to the ValueType
             For example: BoxValue<bytes> -> check that the sourceType is related to bytes
             */
-            if (reportErrors && !typeToString(originalTarget).match(/^(GlobalState|LocalState|Box)Value</)) {
+            if (typeToString(originalTarget).match(/^(GlobalState|LocalState|Box)Value</)) {
+                if (originalTarget.aliasTypeArguments !== undefined && originalTarget.aliasTypeArguments[0] !== undefined) {
+                    const expectedType = originalTarget.aliasTypeArguments[0];
+                    return isRelatedTo(originalSource, expectedType, recursionFlags, reportErrors, headMessage, intersectionState);
+                }
+            } else if (typeToString(originalSource).match(/^(GlobalState|LocalState|Box)Value</)) {
+                if (originalSource.aliasTypeArguments !== undefined && originalSource.aliasTypeArguments[0] !== undefined) {
+                    const expectedType = originalSource.aliasTypeArguments[0];
+                    return isRelatedTo(expectedType, originalTarget, recursionFlags, reportErrors, headMessage, intersectionState);
+                }
+            } else {
                 reportErrorResults(originalSource, originalTarget, source, target, headMessage);
-            } else if (originalTarget.aliasTypeArguments !== undefined && originalTarget.aliasTypeArguments[0] !== undefined) {
-                const expectedType = originalTarget.aliasTypeArguments[0];
-
-                return isRelatedTo(originalSource, expectedType, recursionFlags, reportErrors, headMessage, intersectionState);
             }
 
             return Ternary.False;
