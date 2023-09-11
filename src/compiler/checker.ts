@@ -21182,14 +21182,16 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                     const expectedType = originalTarget.aliasTypeArguments[0];
                     return isRelatedTo(originalSource, expectedType, recursionFlags, reportErrors, headMessage, intersectionState);
                 }
-            } else if (typeToString(originalSource).match(/^(GlobalState|LocalState|Box)Value</)) {
+            }
+
+            if (typeToString(originalSource).match(/^(GlobalState|LocalState|Box)Value</)) {
                 if (originalSource.aliasTypeArguments !== undefined && originalSource.aliasTypeArguments[0] !== undefined) {
                     const expectedType = originalSource.aliasTypeArguments[0];
                     return isRelatedTo(expectedType, originalTarget, recursionFlags, reportErrors, headMessage, intersectionState);
                 }
-            } else {
-                reportErrorResults(originalSource, originalTarget, source, target, headMessage);
             }
+
+            if (reportErrors) reportErrorResults(originalSource, originalTarget, source, target, headMessage);
 
             return Ternary.False;
         }
