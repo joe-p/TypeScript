@@ -17733,8 +17733,14 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
             }
         }
 
-        // TEALScript: removed string | numeric | symbol condition
-        if (!(indexType.flags & TypeFlags.Nullable)) {
+        // TEALScript: If the object is a storage map, allow non-string/numeric/symbol indexing
+        if (typeToString(objectType).startsWith('StorageMap<') && objectType.aliasTypeArguments && objectType.aliasTypeArguments[1]) {
+            const expectedIndexType = objectType.aliasTypeArguments[0]
+            if (typeToString(indexType) === typeToString(expectedIndexType)) return objectType.aliasTypeArguments[1];
+            // TEALScript TODO: Custom error when storage key is not the correct type
+        }
+
+        if (!(indexType.flags & TypeFlags.Nullable) && isTypeAssignableToKind(indexType, TypeFlags.StringLike | TypeFlags.NumberLike | TypeFlags.ESSymbolLike)) {
             if (objectType.flags & (TypeFlags.Any | TypeFlags.Never)) {
                 return objectType;
             }
@@ -17829,13 +17835,6 @@ export function createTypeChecker(host: TypeCheckerHost): TypeChecker {
                                 }
                                 else if (indexType.flags & (TypeFlags.Number | TypeFlags.String)) {
                                     errorInfo = chainDiagnosticMessages(/*details*/ undefined, Diagnostics.No_index_signature_with_a_parameter_of_type_0_was_found_on_type_1, typeToString(indexType), typeToString(objectType));
-                                }
-
-                                // TEALScript: If the object is a storage map, allow non-string/numeric/symbol indexing
-                                if (typeToString(objectType).startsWith('StorageMap<') && objectType.aliasTypeArguments && objectType.aliasTypeArguments[1]) {
-                                    const expectedIndexType = objectType.aliasTypeArguments[0]
-                                    if (typeToString(indexType) === typeToString(expectedIndexType)) return objectType.aliasTypeArguments[1];
-                                    // TEALScript TODO: Custom error when storage key is not the correct type
                                 }
 
                                 errorInfo = chainDiagnosticMessages(
